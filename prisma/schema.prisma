@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  fullName  String?
+  phone     String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+
+  @@map("users")
+}
+
+model Posto {
+  id           String           @id @default(cuid())
+  name         String
+  address      String
+  phone        String?
+  email        String?
+  hours        String
+  availability PostoAvailability @default(MEDIO)
+  province     String
+  municipality String
+  capacity     Int              @default(100)
+  manager      String?
+  status       PostoStatus      @default(ACTIVE)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  appointments Appointment[]
+  services     PostoService[]
+
+  @@map("postos")
+}
+
+model Service {
+  id           String          @id @default(cuid())
+  name         String
+  description  String?
+  duration     String
+  price         String
+  requirements Json // Array of strings
+  category     ServiceCategory
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  appointments Appointment[]
+  postos       PostoService[]
+
+  @@map("services")
+}
+
+model PostoService {
+  posto     Posto   @relation(fields: [postoId], references: [id], onDelete: Cascade)
+  postoId   String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String
+
+  @@id([postoId, serviceId])
+  @@map("posto_services")
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  referenceNumber String            @unique
+  appointmentDate String // YYYY-MM-DD format
+  appointmentTime String // HH:MM format
+  status          AppointmentStatus @default(SCHEDULED)
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String
+  posto     Posto   @relation(fields: [postoId], references: [id], onDelete: Cascade)
+  postoId   String
+
+  @@map("appointments")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PostoStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum PostoAvailability {
+  ALTO
+  MEDIO
+  BAIXO
+}
+
+enum ServiceCategory {
+  EMISSION
+  RENEWAL
+  UPDATE
+  REPLACEMENT
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
