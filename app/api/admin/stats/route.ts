@@ -4,7 +4,7 @@ import { getUserFromToken } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get("auth-token")?.value;
+    const token = request.cookies.get("admin-auth-token")?.value;
     if (!token) {
       return NextResponse.json({ error: "Token administrativo não encontrado" }, { status: 401 });
     }

@@ -1,39 +1,62 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { User, Mail, Phone, Calendar, Edit, Save, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { AppHeader } from "@/components/app-header"
-import { AuthGuard } from "@/components/auth-guard"
-import { useAuth } from "@/contexts/auth-context"
+import { useState } from "react";
+import { User, Mail, Phone, Calendar, Edit, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { AppHeader } from "@/components/app-header";
+import { AuthGuard } from "@/components/auth-guard";
+import { useAuth } from "@/contexts/auth-context"; // ✅ importar contexto
 
 export default function PerfilPage() {
-  const { user } = useAuth()
-  const [isEditing, setIsEditing] = useState(false)
+  const { user, updateUser } = useAuth(); // ✅ usar updateUser
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
     email: user?.email || "",
     phone: user?.phone || "",
-  })
+  });
 
-  const handleSave = () => {
-    // Aqui você salvaria os dados
-    console.log("Salvando dados:", formData)
-    setIsEditing(false)
-  }
+  console.log(user)
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const { error } = await response.json();
+        console.error("Erro ao atualizar:", error);
+        return;
+      }
+
+      const { user: updatedUser } = await response.json();
+
+      console.log("Usuário atualizado:", updatedUser);
+
+      updateUser(updatedUser); // ✅ atualiza o usuário no contexto
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+    }
+  };
 
   const handleCancel = () => {
     setFormData({
       fullName: user?.fullName || "",
       email: user?.email || "",
       phone: user?.phone || "",
-    })
-    setIsEditing(false)
-  }
+    });
+    setIsEditing(false);
+  };
 
   return (
     <AuthGuard>
@@ -155,5 +178,5 @@ export default function PerfilPage() {
         </div>
       </div>
     </AuthGuard>
-  )
+  );
 }

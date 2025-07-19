@@ -1,19 +1,20 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Calendar, MapPin, User, ArrowRight, Shield, Zap, Globe } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { AppHeader } from "@/components/app-header"
-import { Loading } from "@/components/loading"
-import { useAuth } from "@/contexts/auth-context"
+import Link from "next/link";
+import { Calendar, MapPin, User, ArrowRight, Shield, Zap, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { AppHeader } from "@/components/app-header";
+import { Loading } from "@/components/loading";
+import { useAuth } from "@/contexts/auth-context";
+import { Footer } from "@/components/ui/footer";
 
 export default function HomePage() {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return <Loading message="Carregando..." />
+    return <Loading message="Carregando..." />;
   }
 
   return (
@@ -25,20 +26,15 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center">
-            <Badge className="mb-6 bg-white/20 text-white border-white/30 hover:bg-white/30">
-              <Globe className="w-4 h-4 mr-2" />
-              Plataforma Oficial do Governo de Angola
-            </Badge>
-
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               Agende o seu
               <br />
               <span className="text-yellow-300 relative">
                 Bilhete de Identidade
-                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-yellow-300/50 rounded"></div>
+                <div className="absolute -bottom-1 left-0 right-0 h-1 bg-yellow-300/50 rounded"></div>
               </span>
               <br />
-              de forma digital
+              <div className="mt-4">de forma digital</div>
             </h1>
 
             <p className="text-xl md:text-2xl mb-8 text-red-100 max-w-3xl mx-auto leading-relaxed">
@@ -70,10 +66,10 @@ export default function HomePage() {
                   <Link href="/auth/login">
                     <Button
                       size="lg"
-                      variant="outline"
-                      className="border-white text-white hover:bg-white hover:text-red-600 px-8 py-4 text-lg"
+                      className="bg-white text-red-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
                     >
                       Já tenho conta
+                      <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
                 </>
@@ -219,82 +215,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Test Accounts Section */}
-      {!user && (
-        <section className="py-20 bg-blue-50">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Contas de Demonstração</h2>
-            <p className="text-gray-600 mb-8">Experimente o sistema com estas contas de teste</p>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="border-2 border-purple-200 bg-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-6 h-6 text-purple-600" />
-                    </div>
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">Conta de Administrador</h3>
-                  <p className="text-gray-600 text-sm mb-4">Acesso completo ao painel administrativo</p>
-                  <div className="bg-gray-50 p-4 rounded-lg text-sm space-y-1">
-                    <p>
-                      <strong>Email:</strong> admin@bi.gov.ao
-                    </p>
-                    <p>
-                      <strong>Senha:</strong> admin123
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-2 border-blue-200 bg-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-blue-600" />
-                    </div>
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">Conta de Usuário</h3>
-                  <p className="text-gray-600 text-sm mb-4">Acesso para criar e gerenciar agendamentos</p>
-                  <div className="bg-gray-50 p-4 rounded-lg text-sm space-y-1">
-                    <p>
-                      <strong>Email:</strong> user@example.com
-                    </p>
-                    <p>
-                      <strong>Senha:</strong> user123
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gray-900 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Pronto para começar?</h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Junte-se a milhares de angolanos que já usam o agendamento digital
-          </p>
-          {user ? (
-            <Link href="/agendar">
-              <Button size="lg" className="bg-red-600 hover:bg-red-700 px-8 py-4 text-lg">
-                <Calendar className="w-5 h-5 mr-2" />
-                Fazer Meu Agendamento
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/auth/register">
-              <Button size="lg" className="bg-red-600 hover:bg-red-700 px-8 py-4 text-lg">
-                <Calendar className="w-5 h-5 mr-2" />
-                Criar Conta Gratuita
-              </Button>
-            </Link>
-          )}
-        </div>
-      </section>
+      <Footer />
     </div>
-  )
+  );
 }

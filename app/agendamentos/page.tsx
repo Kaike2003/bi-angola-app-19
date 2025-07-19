@@ -20,6 +20,8 @@ import { AuthGuard } from "@/components/auth-guard";
 import { useAuth } from "@/contexts/auth-context";
 import { useLocalData } from "@/hooks/use-local-data";
 import { generateAppointmentPDF } from "@/lib/pdf-generator";
+import Link from "next/link";
+import { Appointment } from "../admin/appointments/page";
 
 export default function AgendamentosPage() {
   const { user } = useAuth();
@@ -112,6 +114,24 @@ export default function AgendamentosPage() {
         return "Faltou";
       default:
         return status;
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, status: Appointment["status"]) => {
+    try {
+      const response = await fetch(`/api/appointments/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      if (response.ok) {
+        setAppointments(appointments.map((apt) => (apt.id === id ? { ...apt, status } : apt)));
+      }
+    } catch (error) {
+      console.error("Error updating appointment:", error);
     }
   };
 
@@ -292,10 +312,12 @@ export default function AgendamentosPage() {
                       : "Tente ajustar os filtros para encontrar o que procura."}
                   </p>
                   {appointments.length === 0 && (
-                    <Button className="bg-red-600 hover:bg-red-700">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Fazer Agendamento
-                    </Button>
+                    <Link href={"/agendar"}>
+                      <Button className="bg-red-600 hover:bg-red-700">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Fazer Agendamento
+                      </Button>
+                    </Link>
                   )}
                 </CardContent>
               </Card>
@@ -411,14 +433,6 @@ export default function AgendamentosPage() {
                                     <FileText className="w-4 h-4 mr-2" />
                                     Baixar PDF
                                   </Button>
-                                  <Button
-                                    onClick={() => handleDownloadJSON(selectedAppointment)}
-                                    variant="outline"
-                                    className="flex-1"
-                                  >
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Baixar JSON
-                                  </Button>
                                 </div>
                               </div>
                             )}
@@ -428,6 +442,14 @@ export default function AgendamentosPage() {
                         <Button variant="outline" size="sm" onClick={() => handleDownloadPDF(appointment)}>
                           <FileText className="w-4 h-4 mr-2" />
                           PDF
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={appointment.status === "CANCELLED"}
+                          onClick={() => handleUpdateStatus(appointment.id, "CANCELLED")}
+                        >
+                          Cancelar
                         </Button>
                       </div>
                     </div>

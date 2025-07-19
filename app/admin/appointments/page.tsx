@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pagination } from "@/components/ui/pagination";
 import AdminLayout from "@/components/admin-layout";
 
-interface Appointment {
+export interface Appointment {
   id: string;
   referenceNumber: string;
   appointmentDate: string;

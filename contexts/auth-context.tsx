@@ -19,6 +19,7 @@ interface AuthContextType {
   register: (email: string, password: string, fullName: string, phone?: string) => Promise<RegisterResult>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateUser: (newUserData: Partial<User>) => void;
 }
 
 interface RegisterResult {
@@ -114,12 +115,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await checkAuth();
   };
 
+  const updateUser = (newUserData: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...newUserData } : prev));
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

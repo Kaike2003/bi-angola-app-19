@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { MapPin, Plus, Edit, Trash2, Eye, Phone, Mail, Users, Clock } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+import { useCallback, useEffect, useState } from "react";
+import { MapPin, Plus, Edit, Trash2, Eye, Phone, Mail, Users, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -16,21 +16,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { useLocalData } from "@/hooks/use-local-data"
-import AdminLayout from "@/components/admin-layout"
-import type { Posto } from "@/lib/mock-data"
-import { provinces } from "@/lib/mock-data"
+} from "@/components/ui/dialog";
+import { useLocalData } from "@/hooks/use-local-data";
+import AdminLayout from "@/components/admin-layout";
+import type { Posto } from "@/lib/mock-data";
+import { provinces } from "@/lib/mock-data";
+
+type Type = "MEDIO" | "BAIXO" | "ALTO";
+type Status = "ACTIVE" | "INACTIVE" | "MAINTENANCE";
 
 export default function PostosPage() {
-  const { getPostos, getServices, createPosto, updatePosto, deletePosto, loading: dataLoading } = useLocalData()
-  const [postos, setPostos] = useState<Posto[]>([])
-  const [services, setServices] = useState<ReturnType<typeof getServices>>([])
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const [selectedPosto, setSelectedPosto] = useState<Posto | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [provinceFilter, setProvinceFilter] = useState<string>("all")
+  const { getPostos, getServices, loading: dataLoading } = useLocalData();
+  const [postos, setPostos] = useState<Posto[]>([]);
+  const [services, setServices] = useState<ReturnType<typeof getServices>>([]);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedPosto, setSelectedPosto] = useState<Posto | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [provinceFilter, setProvinceFilter] = useState<string>("all");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -43,16 +46,22 @@ export default function PostosPage() {
     capacity: 100,
     services: [] as string[],
     manager: "",
-    status: "ACTIVE" as const,
-    availability: "Médio" as const,
-  })
+    status: "ACTIVE" as Status,
+    availability: "MEDIO" as Type,
+  });
+
+  const callBack = useCallback(async () => {
+    if (!dataLoading) {
+      let updatedPostos = await fetch("/api/postos");
+      let updateServices = await fetch("/api/services");
+      setPostos(await updatedPostos.json());
+      setServices(await updateServices.json());
+    }
+  }, [dataLoading]);
 
   useEffect(() => {
-    if (!dataLoading) {
-      setPostos(getPostos())
-      setServices(getServices())
-    }
-  }, [dataLoading])
+    callBack();
+  }, [callBack]);
 
   const resetForm = () => {
     setFormData({
@@ -67,37 +76,75 @@ export default function PostosPage() {
       services: [],
       manager: "",
       status: "ACTIVE",
-      availability: "Médio",
-    })
-  }
+      availability: "MEDIO",
+    });
+  };
 
-  const handleCreate = () => {
-    const newPosto = createPosto(formData)
-    setPostos([...postos, newPosto])
-    setIsCreateOpen(false)
-    resetForm()
-  }
+  const handleCreate = async () => {
+    const res = await fetch("/api/admin/postos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Para enviar cookies com o token
+      body: JSON.stringify(formData),
+    });
 
-  const handleEdit = () => {
-    if (!selectedPosto) return
-    const updatedPosto = updatePosto(selectedPosto.id, formData)
-    if (updatedPosto) {
-      setPostos(postos.map((p) => (p.id === selectedPosto.id ? updatedPosto : p)))
-      setIsEditOpen(false)
-      setSelectedPosto(null)
-      resetForm()
+    if (res.ok) {
+      let updatedPostos = await fetch("/api/postos");
+      let updateServices = await fetch("/api/services");
+      setPostos(await updatedPostos.json());
+      setServices(await updateServices.json());
+    } else {
+      console.error("Erro ao criar posto:", await res.text());
     }
-  }
 
-  const handleDelete = (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este posto?")) {
-      deletePosto(id)
-      setPostos(postos.filter((p) => p.id !== id))
+    setIsCreateOpen(false);
+    resetForm();
+  };
+
+  const handleEdit = async () => {
+    if (!selectedPosto) return;
+    const response = await fetch(`/api/admin/postos/${selectedPosto.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        ...formData,
+        serviceIds: formData.services,
+      }),
+    });
+
+    if (response.ok) {
+      let updatedPostos = await fetch("/api/postos");
+      let updateServices = await fetch("/api/services");
+      setPostos(await updatedPostos.json());
+      setServices(await updateServices.json());
+      setIsEditOpen(false);
+      resetForm();
+    } else {
+      console.error("Erro ao criar posto:", await response.text());
     }
-  }
+  };
+
+  const handleDelete = async (id: string) => {
+    const res = await fetch(`/api/admin/postos/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    let updatedPostos = await fetch("/api/postos");
+    let updateServices = await fetch("/api/services");
+    setPostos(await updatedPostos.json());
+    setServices(await updateServices.json());
+  };
 
   const openEditDialog = (posto: Posto) => {
-    setSelectedPosto(posto)
+    setSelectedPosto(posto);
     setFormData({
       name: posto.name,
       address: posto.address,
@@ -111,46 +158,46 @@ export default function PostosPage() {
       manager: posto.manager || "",
       status: posto.status,
       availability: posto.availability,
-    })
-    setIsEditOpen(true)
-  }
+    });
+    setIsEditOpen(true);
+  };
 
   const filteredPostos = postos.filter((posto) => {
     const matchesSearch =
       posto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       posto.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      posto.municipality.toLowerCase().includes(searchTerm.toLowerCase())
+      posto.municipality.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesProvince = provinceFilter === "all" || posto.province === provinceFilter
+    const matchesProvince = provinceFilter === "all" || posto.province === provinceFilter;
 
-    return matchesSearch && matchesProvince
-  })
+    return matchesSearch && matchesProvince;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ACTIVE":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "INACTIVE":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       case "MAINTENANCE":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
-  const getAvailabilityColor = (availability: string) => {
+  const getAvailabilityColor = (availability: Type) => {
     switch (availability) {
-      case "Alto":
-        return "bg-green-100 text-green-800"
-      case "Médio":
-        return "bg-yellow-100 text-yellow-800"
-      case "Baixo":
-        return "bg-red-100 text-red-800"
+      case "ALTO":
+        return "bg-green-100 text-green-800";
+      case "MEDIO":
+        return "bg-yellow-100 text-yellow-800";
+      case "BAIXO":
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   if (dataLoading) {
     return (
@@ -162,7 +209,7 @@ export default function PostosPage() {
           </div>
         </div>
       </AdminLayout>
-    )
+    );
   }
 
   return (
@@ -298,9 +345,9 @@ export default function PostosPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Alto">Alto</SelectItem>
-                      <SelectItem value="Médio">Médio</SelectItem>
-                      <SelectItem value="Baixo">Baixo</SelectItem>
+                      <SelectItem value="ALTO">Alto</SelectItem>
+                      <SelectItem value="MEDIO">Médio</SelectItem>
+                      <SelectItem value="BAIXO">Baixo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -602,9 +649,9 @@ export default function PostosPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Alto">Alto</SelectItem>
-                    <SelectItem value="Médio">Médio</SelectItem>
-                    <SelectItem value="Baixo">Baixo</SelectItem>
+                    <SelectItem value="ALTO">Alto</SelectItem>
+                    <SelectItem value="MEDIO">Médio</SelectItem>
+                    <SelectItem value="BAIXO">Baixo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -638,5 +685,5 @@ export default function PostosPage() {
         </Dialog>
       </div>
     </AdminLayout>
-  )
+  );
 }

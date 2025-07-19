@@ -118,16 +118,6 @@ export default function LoginPage() {
                 </Link>
               </p>
             </div>
-
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-xs text-blue-700">
-                <strong>Contas de teste:</strong>
-                <br />
-                Admin: admin@bi.gov.ao / admin123
-                <br />
-                User: user@example.com / user123
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>

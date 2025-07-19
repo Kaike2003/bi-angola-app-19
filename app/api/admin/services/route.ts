@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get("auth-token")?.value;
+    const token = request.cookies.get("admin-auth-token")?.value;
     if (!token) {
       return NextResponse.json({ error: "Token de acesso necessário" }, { status: 401 });
     }

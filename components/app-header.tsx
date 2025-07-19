@@ -35,7 +35,6 @@ export function AppHeader({ showSearch = false, title, subtitle, compact = false
   }
 
   const navigation = [
-    { name: "Início", href: "/", show: true },
     { name: "Agendar", href: "/agendar", show: !!user },
     { name: "Meus Agendamentos", href: "/agendamentos", show: !!user },
     { name: "Admin", href: "/admin", show: user?.role === "ADMIN" },

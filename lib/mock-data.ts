@@ -1,62 +1,62 @@
 // Dados locais para desenvolvimento
 export interface User {
-  id: string
-  email: string
-  password: string
-  fullName?: string
-  phone?: string
-  role: "USER" | "ADMIN"
-  createdAt: string
-  updatedAt: string
+  id: string;
+  email: string;
+  password: string;
+  fullName?: string;
+  phone?: string;
+  role: "USER" | "ADMIN";
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Posto {
-  id: string
-  name: string
-  address: string
-  phone?: string
-  email?: string
-  hours: string
-  availability: "Alto" | "Médio" | "Baixo"
-  province: string
-  municipality: string
+  id: string;
+  name: string;
+  address: string;
+  phone?: string;
+  email?: string;
+  hours: string;
+  availability: "ALTO" | "MEDIO" | "BAIXO";
+  province: string;
+  municipality: string;
   coordinates?: {
-    lat: number
-    lng: number
-  }
-  capacity: number
-  services: string[]
-  manager?: string
-  status: "ACTIVE" | "INACTIVE" | "MAINTENANCE"
-  createdAt: string
-  updatedAt: string
+    lat: number;
+    lng: number;
+  };
+  capacity: number;
+  services: string[];
+  manager?: string;
+  status: "ACTIVE" | "INACTIVE" | "MAINTENANCE";
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Service {
-  id: string
-  name: string
-  description?: string
-  duration: string
-  cost: string
-  requirements: string[]
-  category: "EMISSION" | "RENEWAL" | "UPDATE" | "REPLACEMENT"
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
+  id: string;
+  name: string;
+  description?: string;
+  duration: string;
+  cost: string;
+  requirements: string[];
+  category: "EMISSION" | "RENEWAL" | "UPDATE" | "REPLACEMENT";
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Appointment {
-  id: string
-  userId: string
-  serviceId: string
-  postoId: string
-  appointmentDate: string
-  appointmentTime: string
-  status: "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW"
-  referenceNumber: string
-  notes?: string
-  createdAt: string
-  updatedAt: string
+  id: string;
+  userId: string;
+  serviceId: string;
+  postoId: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  status: "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
+  referenceNumber: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Províncias de Angola
@@ -79,7 +79,7 @@ export const provinces = [
   "Bié",
   "Cuando Cubango",
   "Cunene",
-]
+];
 
 // Dados mock expandidos
 export const mockUsers: User[] = [
@@ -123,7 +123,7 @@ export const mockUsers: User[] = [
     createdAt: "2024-01-04T00:00:00Z",
     updatedAt: "2024-01-04T00:00:00Z",
   },
-]
+];
 
 export const mockPostos: Posto[] = [
   {
@@ -133,7 +133,7 @@ export const mockPostos: Posto[] = [
     phone: "+244 222 334 567",
     email: "luanda.central@bi.gov.ao",
     hours: "08:00 - 16:00",
-    availability: "Alto",
+    availability: "ALTO",
     province: "Luanda",
     municipality: "Ingombota",
     coordinates: { lat: -8.839, lng: 13.2894 },
@@ -151,7 +151,7 @@ export const mockPostos: Posto[] = [
     phone: "+244 222 445 678",
     email: "maianga@bi.gov.ao",
     hours: "08:00 - 16:00",
-    availability: "Médio",
+    availability: "MEDIO",
     province: "Luanda",
     municipality: "Maianga",
     coordinates: { lat: -8.82, lng: 13.24 },
@@ -169,7 +169,7 @@ export const mockPostos: Posto[] = [
     phone: "+244 272 234 567",
     email: "benguela.central@bi.gov.ao",
     hours: "08:00 - 15:30",
-    availability: "Baixo",
+    availability: "BAIXO",
     province: "Benguela",
     municipality: "Benguela",
     coordinates: { lat: -12.5763, lng: 13.4055 },
@@ -187,7 +187,7 @@ export const mockPostos: Posto[] = [
     phone: "+244 241 234 567",
     email: "huambo.central@bi.gov.ao",
     hours: "08:00 - 15:30",
-    availability: "Alto",
+    availability: "ALTO",
     province: "Huambo",
     municipality: "Huambo",
     coordinates: { lat: -12.7756, lng: 15.7395 },
@@ -205,7 +205,7 @@ export const mockPostos: Posto[] = [
     phone: "+244 231 234 567",
     email: "cabinda@bi.gov.ao",
     hours: "08:00 - 16:00",
-    availability: "Médio",
+    availability: "MEDIO",
     province: "Cabinda",
     municipality: "Cabinda",
     coordinates: { lat: -5.55, lng: 12.2 },
@@ -216,7 +216,7 @@ export const mockPostos: Posto[] = [
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
   },
-]
+];
 
 export const mockServices: Service[] = [
   {
@@ -287,7 +287,7 @@ export const mockServices: Service[] = [
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
   },
-]
+];
 
 export const mockAppointments: Appointment[] = [
   {
@@ -355,18 +355,18 @@ export const mockAppointments: Appointment[] = [
     createdAt: "2024-01-14T00:00:00Z",
     updatedAt: "2024-01-16T00:00:00Z",
   },
-]
+];
 
 // Funções helper para trabalhar com os dados
 export function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36)
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
 export function generateReferenceNumber(): string {
-  return `AG${new Date().getFullYear()}${String(Date.now()).slice(-6)}`
+  return `AG${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
 }
 
 // Simulação de delay para APIs (opcional)
 export function delay(ms = 500): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

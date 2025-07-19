@@ -4,7 +4,7 @@ import { getUserFromToken } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get("auth-token")?.value;
+    const token = request.cookies.get("admin-auth-token")?.value;
     if (!token) {
       return NextResponse.json({ error: "Token de acesso necessário" }, { status: 401 });
     }
@@ -111,5 +111,40 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Create posto error:", error);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const token = request.cookies.get("admin-auth-token")?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Token de acesso necessário" }, { status: 401 });
+    }
+
+    const currentUser = await getUserFromToken(token);
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return NextResponse.json({ error: "Acesso negado. Apenas administradores." }, { status: 403 });
+    }
+
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "ID do posto é obrigatório" }, { status: 400 });
+    }
+
+    // Deleta serviços vinculados ao posto (tabela intermediária)
+    await prisma.postoService.deleteMany({
+      where: { postoId: id },
+    });
+
+    // Deleta o posto
+    await prisma.posto.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ message: "Posto excluído com sucesso" });
+  } catch (error) {
+    console.error("Erro ao deletar posto:", error);
+    return NextResponse.json({ error: "Erro ao deletar posto" }, { status: 500 });
   }
 }

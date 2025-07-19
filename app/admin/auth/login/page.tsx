@@ -1,42 +1,44 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Mail, Lock, Eye, EyeOff, Shield } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useAuth } from "@/contexts/auth-context"
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Mail, Lock, Eye, EyeOff, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAdminAuth } from "@/contexts/admin-auth-context";
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const { login } = useAuth()
-  const router = useRouter()
+  const { login } = useAdminAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    const result = await login(email, password, true) // isAdmin = true
+    const result = await login(email, password);
 
-    if (result.success) {
-      router.push("/admin")
+    console.log(result);
+
+    if (result.user) {
+      router.push("/admin");
     } else {
-      setError(result.error || "Erro ao fazer login")
+      setError(result.error || "Erro ao fazer login");
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
@@ -138,5 +140,5 @@ export default function AdminLoginPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

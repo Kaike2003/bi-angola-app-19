@@ -1,13 +1,13 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { verifyPassword, generateToken } from "@/lib/auth"
+import { type NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { verifyPassword, generateToken } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const { email, password } = await request.json();
 
     if (!email || !password) {
-      return NextResponse.json({ error: "Email e senha são obrigatórios" }, { status: 400 })
+      return NextResponse.json({ error: "Email e senha são obrigatórios" }, { status: 400 });
     }
 
     // Find admin user
@@ -16,16 +16,16 @@ export async function POST(request: NextRequest) {
         email,
         role: "ADMIN",
       },
-    })
+    });
 
     if (!user) {
-      return NextResponse.json({ error: "Credenciais administrativas inválidas" }, { status: 401 })
+      return NextResponse.json({ error: "Credenciais administrativas inválidas" }, { status: 401 });
     }
 
     // Verify password
-    const isValidPassword = await verifyPassword(password, user.password)
+    const isValidPassword = await verifyPassword(password, user.password);
     if (!isValidPassword) {
-      return NextResponse.json({ error: "Credenciais administrativas inválidas" }, { status: 401 })
+      return NextResponse.json({ error: "Credenciais administrativas inválidas" }, { status: 401 });
     }
 
     // Generate token
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       role: user.role,
-    })
+    });
 
     // Create response
     const response = NextResponse.json({
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
-    })
+    });
 
     // Set cookie
     response.cookies.set("admin-auth-token", token, {
@@ -54,11 +54,13 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
-    })
+    });
 
-    return response
+    console.log("passando aqui...");
+
+    return response;
   } catch (error) {
-    console.error("Admin login error:", error)
-    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 })
+    console.error("Admin login error:", error);
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

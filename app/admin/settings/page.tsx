@@ -28,15 +28,27 @@ export default function SettingsPage() {
     try {
       const res = await fetch("/api/admin/data");
       const data = await res.json();
-      console.log(data);
+      console.log("Dados recebidos da API:", data);
 
       const workbook = XLSX.utils.book_new();
 
+      const flatten = (obj: any, prefix = ""): any =>
+        Object.entries(obj).reduce((acc, [key, val]) => {
+          const newKey = prefix ? `${prefix}_${key}` : key;
+          if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+            Object.assign(acc, flatten(val, newKey)); // recursivo para aninhados
+          } else {
+            acc[newKey] = val;
+          }
+          return acc;
+        }, {} as any);
+
       Object.entries(data).forEach(([key, value]) => {
-        // Aplica flatten a cada item da lista
-        const flattened = (value as any[]).map((item) => flatten(item));
-        const worksheet = XLSX.utils.json_to_sheet(flattened);
-        XLSX.utils.book_append_sheet(workbook, worksheet, key);
+        if (Array.isArray(value) && value.length > 0) {
+          const flattened = value.map((item) => flatten(item));
+          const worksheet = XLSX.utils.json_to_sheet(flattened);
+          XLSX.utils.book_append_sheet(workbook, worksheet, key); // uma aba por chave
+        }
       });
 
       const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
@@ -48,54 +60,12 @@ export default function SettingsPage() {
       a.click();
       URL.revokeObjectURL(url);
 
-      setMessage("Dados exportados para Excel com sucesso!");
+      setMessage("Todos os dados foram exportados com sucesso para Excel!");
     } catch (err) {
-      console.error(err);
+      console.error("Erro ao exportar:", err);
       setMessage("Erro ao exportar dados para Excel.");
     }
     setLoading(false);
-  };
-
-  const handleExportData = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/data");
-      const data = await res.json();
-
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `bi-angola-backup-${new Date().toISOString().split("T")[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      setMessage("Dados exportados com sucesso!");
-    } catch (err) {
-      console.error(err);
-      setMessage("Erro ao exportar dados.");
-    }
-    setLoading(false);
-  };
-
-  const handleResetData = async () => {
-    if (confirm("Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita.")) {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/admin/reset", { method: "POST" });
-        const data = await res.json();
-
-        if (res.ok) {
-          setMessage(data.message || "Dados resetados com sucesso!");
-        } else {
-          setMessage(data.error || "Erro ao resetar dados.");
-        }
-      } catch (err) {
-        console.error(err);
-        setMessage("Erro ao resetar dados.");
-      }
-      setLoading(false);
-    }
   };
 
   return (
@@ -128,31 +98,11 @@ export default function SettingsPage() {
                 <p className="text-sm text-gray-600">Fazer backup de todos os dados do sistema</p>
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleExportData} variant="outline" disabled={loading}>
-                  <Download className="w-4 h-4 mr-2" />
-                  JSON
-                </Button>
                 <Button onClick={handleExportExcel} variant="outline" disabled={loading}>
                   <Download className="w-4 h-4 mr-2" />
                   Excel
                 </Button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <h3 className="font-medium">Reset dos Dados</h3>
-                <p className="text-sm text-gray-600">Restaurar dados originais do sistema</p>
-              </div>
-              <Button
-                onClick={handleResetData}
-                variant="outline"
-                className="text-red-600 border-red-200"
-                disabled={loading}
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Reset
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -171,18 +121,6 @@ export default function SettingsPage() {
               <div className="flex justify-between">
                 <span className="text-gray-600">Versão:</span>
                 <span className="font-medium">1.0.0</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tipo de Dados:</span>
-                <span className="font-medium">Banco de Dados</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Framework:</span>
-                <span className="font-medium">Next.js 14</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Última Atualização:</span>
-                <span className="font-medium">{new Date().toLocaleDateString("pt-PT")}</span>
               </div>
             </div>
           </CardContent>

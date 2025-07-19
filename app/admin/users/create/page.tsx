@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { User, Mail, Lock, Phone, Shield, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAdminAuth } from "@/contexts/admin-auth-context"
-import AdminLayout from "@/components/admin-layout"
-import Link from "next/link"
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { User, Mail, Lock, Phone, Shield, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAdminAuth } from "@/contexts/admin-auth-context";
+import AdminLayout from "@/components/admin-layout";
+import Link from "next/link";
 
 export default function CreateUserPage() {
   const [formData, setFormData] = useState({
@@ -21,47 +21,47 @@ export default function CreateUserPage() {
     fullName: "",
     phone: "",
     role: "USER" as "USER" | "ADMIN",
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const { createUser } = useAdminAuth()
-  const router = useRouter()
+  const { createUser } = useAdminAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     if (formData.password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres")
-      setLoading(false)
-      return
+      setError("A senha deve ter pelo menos 6 caracteres");
+      setLoading(false);
+      return;
     }
 
-    const result = await createUser(formData)
+    const result = await createUser(formData);
 
-    if (result.success) {
-      setSuccess(`${formData.role === "ADMIN" ? "Administrador" : "Usuário"} criado com sucesso!`)
+    if (result) {
+      setSuccess(`${formData.role === "ADMIN" ? "Administrador" : "Usuário"} criado com sucesso!`);
       setFormData({
         email: "",
         password: "",
         fullName: "",
         phone: "",
         role: "USER",
-      })
+      });
     } else {
-      setError(result.error || "Erro ao criar usuário")
+      setError((result.error as any) || "Erro ao criar usuário");
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <AdminLayout>
@@ -212,5 +212,5 @@ export default function CreateUserPage() {
         </Card>
       </div>
     </AdminLayout>
-  )
+  );
 }

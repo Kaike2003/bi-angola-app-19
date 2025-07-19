@@ -1,82 +1,81 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { useSearchParams, useRouter } from "next/navigation"
-import { CheckCircle, Download, CalendarPlus, FileText } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AppHeader } from "@/components/app-header"
-import { useAuth } from "@/contexts/auth-context"
-import { generateAppointmentPDF } from "@/lib/pdf-generator"
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { CheckCircle, Download, CalendarPlus, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AppHeader } from "@/components/app-header";
+import { useAuth } from "@/contexts/auth-context";
+import { generateAppointmentPDF } from "@/lib/pdf-generator";
 
 const steps = [
   { id: 1, title: "Escolher Serviço", active: true },
   { id: 2, title: "Seleccionar Posto", active: true },
   { id: 3, title: "Data e Hora", active: true },
   { id: 4, title: "Confirmação", active: true },
-]
+];
 
 interface Service {
-  id: string
-  name: string
-  description: string
-  price: number
-  duration: number
-  requirements?: string[]
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+  requirements?: string[];
 }
 
 interface Posto {
-  id: string
-  name: string
-  address: string
-  phone: string
-  hours: string
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  hours: string;
 }
 
 interface Appointment {
-  id: string
-  referenceNumber: string
-  appointmentDate: string
-  appointmentTime: string
-  status: string
-  createdAt: string
-  service: Service
-  posto: Posto
+  id: string;
+  referenceNumber: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  status: string;
+  createdAt: string;
+  service: Service;
+  posto: Posto;
 }
 
 export default function ConfirmacaoPage() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const { user } = useAuth()
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user } = useAuth();
 
-  const serviceId = searchParams.get("service")
-  const postoId = searchParams.get("posto")
-  const date = searchParams.get("date")
-  const time = searchParams.get("time")
+  const serviceId = searchParams.get("service");
+  const postoId = searchParams.get("posto");
+  const date = searchParams.get("date");
+  const time = searchParams.get("time");
 
-  const [appointment, setAppointment] = useState<Appointment | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const hasCreatedRef = useRef(false);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/auth/login")
-      return
+    if (!user || !serviceId || !postoId || !date || !time) {
+      router.push(!user ? "/auth/login" : "/agendar");
+      return;
     }
 
-    if (!serviceId || !postoId || !date || !time) {
-      router.push("/agendar")
-      return
+    if (!hasCreatedRef.current) {
+      hasCreatedRef.current = true;
+      createAppointment();
     }
-
-    createAppointment()
-  }, [user, serviceId, postoId, date, time])
-
+  }, [user, serviceId, postoId, date, time]);
   const createAppointment = async () => {
-    setIsCreating(true)
-    setError(null)
+    console.log("executado");
+    setIsCreating(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/appointments", {
@@ -92,25 +91,25 @@ export default function ConfirmacaoPage() {
           appointmentTime: time,
           notes: `Agendamento criado via sistema web`,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Erro ao criar agendamento")
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro ao criar agendamento");
       }
 
-      const newAppointment = await response.json()
-      setAppointment(newAppointment)
+      const newAppointment = await response.json();
+      setAppointment(newAppointment);
     } catch (error) {
-      console.error("Error:", error)
-      setError(error instanceof Error ? error.message : "Erro desconhecido")
+      console.error("Error:", error);
+      setError(error instanceof Error ? error.message : "Erro desconhecido");
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   const handleDownloadPDF = () => {
-    if (!appointment || !user) return
+    if (!appointment || !user) return;
 
     const pdfData = {
       referenceNumber: appointment.referenceNumber,
@@ -127,13 +126,13 @@ export default function ConfirmacaoPage() {
       appointmentTime: appointment.appointmentTime,
       status: appointment.status,
       createdAt: appointment.createdAt,
-    }
+    };
 
-    generateAppointmentPDF(pdfData)
-  }
+    generateAppointmentPDF(pdfData);
+  };
 
   const handleDownloadJSON = () => {
-    if (!appointment || !user) return
+    if (!appointment || !user) return;
 
     const data = {
       agendamento: {
@@ -167,38 +166,38 @@ export default function ConfirmacaoPage() {
           day: "numeric",
         }),
       },
-    }
+    };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `agendamento-${appointment.referenceNumber}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `agendamento-${appointment.referenceNumber}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const addToCalendar = () => {
-    if (!appointment) return
+    if (!appointment) return;
 
-    const startDate = new Date(`${appointment.appointmentDate}T${appointment.appointmentTime}:00`)
-    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000) // 1 hora depois
+    const startDate = new Date(`${appointment.appointmentDate}T${appointment.appointmentTime}:00`);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hora depois
 
     const formatDate = (date: Date) => {
-      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
-    }
+      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    };
 
     const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-      `Agendamento BI - ${appointment.service.name}`,
+      `Agendamento BI - ${appointment.service.name}`
     )}&dates=${formatDate(startDate)}/${formatDate(endDate)}&details=${encodeURIComponent(
       `Número: ${appointment.referenceNumber}
 Serviço: ${appointment.service.name}
 Posto: ${appointment.posto.name}
-Endereço: ${appointment.posto.address}`,
-    )}&location=${encodeURIComponent(appointment.posto.address)}`
+Endereço: ${appointment.posto.address}`
+    )}&location=${encodeURIComponent(appointment.posto.address)}`;
 
-    window.open(calendarUrl, "_blank")
-  }
+    window.open(calendarUrl, "_blank");
+  };
 
   if (isCreating) {
     return (
@@ -208,7 +207,7 @@ Endereço: ${appointment.posto.address}`,
           <p className="text-gray-600">Criando seu agendamento...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -225,7 +224,7 @@ Endereço: ${appointment.posto.address}`,
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   if (!appointment) {
@@ -235,7 +234,7 @@ Endereço: ${appointment.posto.address}`,
           <p className="text-gray-600">Carregando...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -290,10 +289,7 @@ Endereço: ${appointment.posto.address}`,
                 <FileText className="w-4 h-4 mr-2" />
                 Baixar PDF
               </Button>
-              <Button onClick={handleDownloadJSON} variant="outline" className="bg-white text-gray-700 border-gray-300">
-                <Download className="w-4 h-4 mr-2" />
-                Baixar JSON
-              </Button>
+
               <Button onClick={addToCalendar} variant="outline" className="bg-white text-gray-700 border-gray-300">
                 <CalendarPlus className="w-4 h-4 mr-2" />
                 Adicionar ao Calendário
@@ -395,5 +391,5 @@ Endereço: ${appointment.posto.address}`,
         </div>
       </div>
     </div>
-  )
+  );
 }
