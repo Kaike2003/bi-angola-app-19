@@ -17,16 +17,28 @@ const steps = [
 ];
 
 const timeSlots = [
-  "08:00", "08:30", "09:00", "09:30", "10:00",
-  "10:30", "11:00", "11:30", "12:00", "12:30",
-  "14:00", "14:30", "15:00", "15:30", "16:00"
+  "08:00",
+  "08:30",
+  "09:00",
+  "09:30",
+  "10:00",
+  "10:30",
+  "11:00",
+  "11:30",
+  "12:00",
+  "12:30",
+  "14:00",
+  "14:30",
+  "15:00",
+  "15:30",
+  "16:00",
 ];
 
 type Appointment = {
   postoId: string;
   appointmentDate: string;
   appointmentTime: string;
-  status: string;
+  status: "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
 };
 
 export default function DataHoraPage() {
@@ -48,10 +60,9 @@ export default function DataHoraPage() {
       if (postoId) setSelectedPosto(getPostoById(postoId));
 
       try {
-        const appointmentsRes = await fetch("/api/appointments", { credentials: "include" });
+        const appointmentsRes = await fetch("/api/appointmentsall", { credentials: "include" });
         if (appointmentsRes.ok) {
           const appointmentsData = await appointmentsRes.json();
-          console.log("Agendamentos recebidos:", appointmentsData);
           setAppointments(appointmentsData);
         } else {
           console.error("Erro ao buscar agendamentos");
@@ -106,7 +117,7 @@ export default function DataHoraPage() {
         apt.postoId === postoIdStr &&
         apt.appointmentDate === dateStr &&
         apt.appointmentTime === time &&
-        apt.status.toLowerCase() === "scheduled"
+        apt.status === "SCHEDULED"
     );
 
     return !existingAppointment;
@@ -133,7 +144,9 @@ export default function DataHoraPage() {
 
   const nextUrl =
     selectedDate && selectedTime
-      ? `/agendar/confirmacao?service=${serviceId}&posto=${postoId}&date=${formatDate(selectedDate)}&time=${selectedTime}`
+      ? `/agendar/confirmacao?service=${serviceId}&posto=${postoId}&date=${formatDate(
+          selectedDate
+        )}&time=${selectedTime}`
       : "#";
 
   return (
