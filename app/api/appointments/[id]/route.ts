@@ -4,7 +4,13 @@ import { getUserFromToken } from "@/lib/auth";
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const token = request.cookies.get("admin-auth-token")?.value || request.cookies.get("auth-token")?.value;
+    const token =
+      request.cookies.get("admin-auth-token")?.value ||
+      request.cookies.get("auth-token")?.value ||
+      request.cookies.get("employee-auth-token")?.value;
+
+    console.log(token);
+
     if (!token) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
@@ -25,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: "Agendamento não encontrado" }, { status: 404 });
     }
 
-    if (user.role !== "ADMIN" && appointment.userId !== user.id) {
+    if (user.role !== "ADMIN" && user.role !== "EMPLOYEE" && appointment.userId !== user.id) {
       return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
     }
 
@@ -74,7 +80,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Agendamento não encontrado" }, { status: 404 });
     }
 
-    if (user.role !== "ADMIN" && appointment.userId !== user.id) {
+    const isAdminOrEmployee = user.role === "ADMIN" || user.role === "EMPLOYEE";
+    const isOwner = appointment.userId === user.id;
+
+    if (!isAdminOrEmployee && !isOwner) {
       return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
     }
 

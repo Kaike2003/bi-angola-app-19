@@ -4,13 +4,15 @@ import { getUserFromToken } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get("admin-auth-token")?.value;
+    const token = request.cookies.get("employee-auth-token")?.value;
+    console.log(token);
     if (!token) {
       return NextResponse.json({ error: "Token de acesso necessário" }, { status: 401 });
     }
 
     const currentUser = await getUserFromToken(token);
-    if (!currentUser || currentUser.role !== "ADMIN") {
+    console.log(token);
+    if (!currentUser || currentUser.role !== "EMPLOYEE") {
       return NextResponse.json({ error: "Acesso negado. Apenas administradores." }, { status: 403 });
     }
 

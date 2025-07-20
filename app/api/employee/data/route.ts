@@ -4,13 +4,14 @@ import { getUserFromToken } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
-    const token = req.headers.get("cookie")?.match(/admin-auth-token=([^;]+)/)?.[1]; 
+    const token = req.headers.get("cookie")?.match(/employee-auth-token=([^;]+)/)?.[1];
+
     if (!token) {
       return NextResponse.json({ error: "Token não encontrado" }, { status: 401 });
     }
 
     const currentUser = await getUserFromToken(token);
-    if (!currentUser || currentUser.role !== "ADMIN") {
+    if (!currentUser || currentUser.role !== "EMPLOYEE") {
       return NextResponse.json({ error: "Acesso negado. Apenas administradores." }, { status: 403 });
     }
 
