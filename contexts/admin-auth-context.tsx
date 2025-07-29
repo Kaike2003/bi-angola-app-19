@@ -71,7 +71,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Erro no login administrativo");
+      return error
     }
 
     const data = await response.json();

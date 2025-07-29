@@ -1,9 +1,9 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { z } from "zod";
 import { Calendar, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,26 +12,56 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
 
+// Schema de validação com Zod
+const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+});
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
 
   const { login } = useAuth();
   const router = useRouter();
 
+  // Validação reativa
+  useEffect(() => {
+    const result = loginSchema.safeParse({ email, password });
+
+    if (!email) setEmailError("");
+    else setEmailError(result.success ? "" : result.error.format().email?._errors[0] || "");
+
+    if (!password) setPasswordError("");
+    else setPasswordError(result.success ? "" : result.error.format().password?._errors[0] || "");
+  }, [email, password]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setFormError("");
+
+    const result = loginSchema.safeParse({ email, password });
+
+    if (!result.success) {
+      const issues = result.error.format();
+      setEmailError(issues.email?._errors[0] || "");
+      setPasswordError(issues.password?._errors[0] || "");
+      setFormError("Corrija os erros antes de continuar.");
+      setLoading(false);
+      return;
+    }
 
     try {
       await login(email, password);
       router.push("/");
     } catch (error: any) {
-      setError(error.message || "Erro ao fazer login");
+      setFormError(error.message || "Erro ao fazer login");
     }
 
     setLoading(false);
@@ -59,14 +89,14 @@ export default function LoginPage() {
             <CardDescription>Entre com seu email e senha</CardDescription>
           </CardHeader>
           <CardContent>
-            {error && (
+            {formError && (
               <Alert className="mb-4 border-red-200 bg-red-50">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
+                <AlertDescription className="text-red-700">{formError}</AlertDescription>
               </Alert>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -77,12 +107,12 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
-                    required
                   />
                 </div>
+                {emailError && <p className="text-sm text-red-500">{emailError}</p>}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -93,7 +123,6 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10"
-                    required
                   />
                   <button
                     type="button"
@@ -103,6 +132,7 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
               </div>
 
               <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" disabled={loading}>

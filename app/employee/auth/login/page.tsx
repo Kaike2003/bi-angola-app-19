@@ -4,6 +4,7 @@ import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { z } from "zod";
 import { Mail, Lock, Eye, EyeOff, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,29 +13,62 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEmployeeAuth } from "@/contexts/employee-auth-context";
 
+// 🔒 Schema de validação com Zod
+const loginSchema = z.object({
+  email: z.string().email("Email inválido").endsWith("@gmail.com", "O email deve terminar com @gmail.com"),
+  password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
+});
+
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [formError, setFormError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const { login } = useEmployeeAuth();
   const router = useRouter();
 
+  // 🔄 Validação em tempo real por campo
+  const validateField = (field: "email" | "password", value: string) => {
+    try {
+      // Define o schema de campo dinamicamente com base no nome do campo
+      const fieldSchema = field === "email" ? loginSchema.pick({ email: true }) : loginSchema.pick({ password: true });
+
+      fieldSchema.parse({ [field]: value });
+
+      if (field === "email") setEmailError("");
+      if (field === "password") setPasswordError("");
+    } catch (err: any) {
+      const message = err?.errors?.[0]?.message || "Campo inválido";
+      if (field === "email") setEmailError(message);
+      if (field === "password") setPasswordError(message);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setFormError("");
 
-    const result = await login(email, password);
+    const result = loginSchema.safeParse({ email, password });
 
-    console.log(result);
+    if (!result.success) {
+      const issues = result.error.format();
+      setEmailError(issues.email?._errors[0] || "");
+      setPasswordError(issues.password?._errors[0] || "");
+      setFormError("Corrija os erros para continuar");
+      setLoading(false);
+      return;
+    }
 
-    if (result.user) {
+    const response = await login(email, password);
+    if (response.user) {
       router.push("/employee");
     } else {
-      setError(result.error || "Erro ao fazer login");
+      setFormError(response.error || "Erro ao fazer login");
     }
 
     setLoading(false);
@@ -43,32 +77,20 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center">
-              <Shield className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="font-bold text-2xl text-gray-900">Admin Panel</h1>
-              <p className="text-sm text-gray-600">BI Angola - Gestão</p>
-            </div>
-          </div>
-        </div>
-
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl text-gray-900">Acesso Administrativo</CardTitle>
             <CardDescription>Entre com suas credenciais de administrador</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            {error && (
+            {formError && (
               <Alert className="mb-4 border-red-200 bg-red-50">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
+                <AlertDescription className="text-red-700">{formError}</AlertDescription>
               </Alert>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email do Administrador</Label>
                 <div className="relative">
@@ -78,13 +100,18 @@ export default function AdminLoginPage() {
                     type="email"
                     placeholder="admin@bi.gov.ao"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      validateField("email", e.target.value);
+                    }}
+                    onBlur={(e) => validateField("email", e.target.value)}
+                    className={`pl-10 ${emailError ? "border-red-500" : ""}`}
                   />
                 </div>
+                {emailError && <p className="text-sm text-red-600">{emailError}</p>}
               </div>
 
+              {/* Senha */}
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
@@ -94,9 +121,12 @@ export default function AdminLoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Sua senha de administrador"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
-                    required
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      validateField("password", e.target.value);
+                    }}
+                    onBlur={(e) => validateField("password", e.target.value)}
+                    className={`pl-10 pr-10 ${passwordError ? "border-red-500" : ""}`}
                   />
                   <button
                     type="button"
@@ -106,6 +136,7 @@ export default function AdminLoginPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
               </div>
 
               <Button

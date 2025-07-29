@@ -13,6 +13,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAdminAuth } from "@/contexts/admin-auth-context";
 import AdminLayout from "@/components/admin-layout";
 import Link from "next/link";
+import { z } from "zod";
+
+// ✅ Schema de validação Zod
+const schema = z.object({
+  fullName: z.string().min(2, "Nome completo obrigatório"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  phone: z.string().min(9, "Número de telefone inválido").max(20).optional().or(z.literal("")),
+  role: z.enum(["USER", "ADMIN", "EMPLOYEE"]),
+});
 
 export default function CreateUserPage() {
   const [formData, setFormData] = useState({
@@ -22,6 +32,8 @@ export default function CreateUserPage() {
     phone: "",
     role: "USER" as "USER" | "ADMIN" | "EMPLOYEE",
   });
+
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -29,38 +41,51 @@ export default function CreateUserPage() {
   const { createUser } = useAdminAuth();
   const router = useRouter();
 
+  const validateField = (field: keyof typeof formData, value: string) => {
+    const partial = schema.safeParse({ ...formData, [field]: value });
+    if (!partial.success) {
+      const issue = partial.error.issues.find((i) => i.path[0] === field);
+      setFormErrors((prev) => ({ ...prev, [field]: issue?.message || "" }));
+    } else {
+      setFormErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    validateField(field, value); // ✅ validação reativa
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setSuccess("");
 
-    if (formData.password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
+    const result = schema.safeParse(formData);
+
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string;
+        newErrors[field] = issue.message;
+      });
+      setFormErrors(newErrors);
       setLoading(false);
       return;
     }
 
-    const result = await createUser(formData);
+    const res = await createUser(formData);
 
-    if (result) {
+    if (res) {
       setSuccess(`${formData.role === "ADMIN" ? "Administrador" : "Usuário"} criado com sucesso!`);
-      setFormData({
-        email: "",
-        password: "",
-        fullName: "",
-        phone: "",
-        role: "USER",
-      });
+      setFormData({ email: "", password: "", fullName: "", phone: "", role: "USER" });
+      setFormErrors({});
     } else {
-      setError((result.error as any) || "Erro ao criar usuário");
+      setError((res.error as any) || "Erro ao criar usuário");
     }
 
     setLoading(false);
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -113,8 +138,8 @@ export default function CreateUserPage() {
                       value={formData.fullName}
                       onChange={(e) => handleInputChange("fullName", e.target.value)}
                       className="pl-10"
-                      required
                     />
+                    {formErrors.fullName && <p className="text-sm text-red-500 mt-1">{formErrors.fullName}</p>}
                   </div>
                 </div>
 
@@ -125,12 +150,12 @@ export default function CreateUserPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="email@exemplo.com"
+                      placeholder="usuario@gmail.com"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       className="pl-10"
-                      required
                     />
+                    {formErrors.email && <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>}
                   </div>
                 </div>
               </div>
@@ -147,8 +172,8 @@ export default function CreateUserPage() {
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
                       className="pl-10"
-                      required
                     />
+                    {formErrors.password && <p className="text-sm text-red-500 mt-1">{formErrors.password}</p>}
                   </div>
                 </div>
 
@@ -164,6 +189,7 @@ export default function CreateUserPage() {
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       className="pl-10"
                     />
+                    {formErrors.phone && <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>}
                   </div>
                 </div>
               </div>
@@ -198,11 +224,7 @@ export default function CreateUserPage() {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">
-                  {formData.role === "ADMIN"
-                    ? "Administradores têm acesso total ao sistema"
-                    : "Usuários normais podem apenas fazer agendamentos"}
-                </p>
+                {formErrors.role && <p className="text-sm text-red-500 mt-1">{formErrors.role}</p>}
               </div>
 
               <div className="flex gap-3 pt-4">
