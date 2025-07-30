@@ -54,6 +54,7 @@ export default function AdminLoginPage() {
     setFormError("");
 
     const result = loginSchema.safeParse({ email, password });
+    localStorage.setItem("email", email);
 
     if (!result.success) {
       const issues = result.error.format();
@@ -64,14 +65,19 @@ export default function AdminLoginPage() {
       return;
     }
 
-    const response = await login(email, password);
-    if (response.user) {
-      router.push("/employee");
-    } else {
-      setFormError(response.error || "Erro ao fazer login");
+    try {
+      const response = await login(email, password);
+      if (response.user) {
+        router.push("/funcionario");
+      } else {
+        setFormError(response.error || "Erro ao fazer login");
+      }
+    } catch (err: any) {
+      // 👇 Captura o erro lançado no contexto de autenticação
+      setFormError(err.message || "Erro inesperado no login");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -80,7 +86,7 @@ export default function AdminLoginPage() {
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl text-gray-900">Acesso Administrativo</CardTitle>
-            <CardDescription>Entre com suas credenciais de administrador</CardDescription>
+            <CardDescription>Entre com suas credenciais de funcionário</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             {formError && (
@@ -92,13 +98,13 @@ export default function AdminLoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email do Administrador</Label>
+                <Label htmlFor="email">Email do Funcionário</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@bi.gov.ao"
+                    placeholder="funcionario@gmail.com"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
@@ -119,7 +125,7 @@ export default function AdminLoginPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Sua senha de administrador"
+                    placeholder="Sua senha"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -144,7 +150,7 @@ export default function AdminLoginPage() {
                 className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2.5"
                 disabled={loading}
               >
-                {loading ? "Verificando..." : "Entrar como Admin"}
+                {loading ? "Verificando..." : "Entrar como funcinário"}
               </Button>
             </form>
 
@@ -163,7 +169,7 @@ export default function AdminLoginPage() {
                 <p className="text-sm font-medium text-amber-800">Área Restrita</p>
               </div>
               <p className="text-xs text-amber-700">
-                Esta área é exclusiva para administradores do sistema BI Angola. Apenas usuários com permissões
+                Esta área é exclusiva para os funcionários do sistema BI Angola. Apenas usuários com permissões
                 administrativas podem acessar.
               </p>
             </div>

@@ -54,6 +54,7 @@ export default function AdminLoginPage() {
     setFormError("");
 
     const result = loginSchema.safeParse({ email, password });
+    localStorage.setItem("email", email);
 
     if (!result.success) {
       const issues = result.error.format();

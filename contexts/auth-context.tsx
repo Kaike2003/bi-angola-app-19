@@ -104,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         credentials: "include",
       });
+      localStorage.removeItem("email");
     } catch (error) {
       console.error("Logout error:", error);
     } finally {

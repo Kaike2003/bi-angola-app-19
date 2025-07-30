@@ -207,7 +207,7 @@ export default function CreateUserPage() {
                     <SelectItem value="USER">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        Usuário Normal
+                        Usuário
                       </div>
                     </SelectItem>
                     <SelectItem value="ADMIN">
@@ -219,7 +219,7 @@ export default function CreateUserPage() {
                     <SelectItem value="EMPLOYEE">
                       <div className="flex items-center gap-2">
                         <Shield className="w-4 h-4" />
-                        EMPLOYEE
+                        Funcionário
                       </div>
                     </SelectItem>
                   </SelectContent>

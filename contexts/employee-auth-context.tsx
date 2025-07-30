@@ -85,6 +85,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         credentials: "include",
       });
+      localStorage.removeItem("email");
     } catch (error) {
       console.error("Admin logout error:", error);
     } finally {
