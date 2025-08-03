@@ -20,13 +20,15 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
 
   const handleSignOut = async () => {
     logout();
-    router.push("/employee/auth/login");
+    router.push("/funcionario/auth/login");
   };
 
+  console.log(user);
+
   const navigation = [
-    { name: "Dashboard", href: "/employee", icon: BarChart3 },
-    { name: "Agendamentos", href: "/employee/appointments", icon: Calendar },
-    { name: "Relatórios", href: "/employee/reports", icon: FileText },
+    { name: "Dashboard", href: "/funcionario", icon: BarChart3 },
+    { name: "Agendamentos", href: "/funcionario/appointments", icon: Calendar },
+    { name: "Relatórios", href: "/funcionario/reports", icon: FileText },
   ];
 
   return (
@@ -73,7 +75,7 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
                   <span className="text-sm font-medium text-red-600">{user?.fullName?.charAt(0) || "A"}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{user?.email || "Employee"}</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{user?.fullName || "Employee"}</p>
                   <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
               </div>
